@@ -1,0 +1,468 @@
+{% load static %}
+
+{% load suggestion_tags %}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}Bakla{% endblock %}</title>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+        {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/bakla.css' %}">
+
+</head>
+<body>
+    <div class="grid-container">
+       <nav>
+            <h2><a href="{% url 'home' %}">Bakla</a></h2>
+            
+            {% if user.is_authenticated %}
+                <!-- YENİ PROFİL KUTUSU (SADE VERSİYON) -->
+                <a href="{% url 'profile' user.username %}" class="nav-profile-summary">
+                    <img src="{% if user.profile.profile_photo %}{{ user.profile.profile_photo.url }}{% else %}{% static 'images/default_profile.png' %}{% endif %}" alt="{{ user.username }}">
+                    <div class="user-info">
+                        <p class="full-name">{% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}</p>
+                        <p class="username">@{{ user.username }}</p>
+                    </div>
+                </a>
+
+                <!-- Navigasyon Linkleri -->
+                <a href="{% url 'home' %}" class="menu-link"><i data-feather="home"></i><span>Ana Sayfa</span></a>
+                <a href="{% url 'discover' %}" class="menu-link"><i data-feather="compass"></i><span>Keşfet</span></a>
+
+<!-- <a href="{% url 'trending_page' %}" class="menu-link"><i data-feather="trending-up"></i><span>Gündem</span></a>-->
+<a href="{% url 'popular_page' %}" class="menu-link"><i data-feather="award"></i><span>Günün En'leri</span></a>
+                <a href="{% url 'konu_list' %}" class="menu-link"><i data-feather="hash"></i><span>Konular</span></a>
+
+                <a href="{% url 'random_post' %}" class="menu-link"><i data-feather="shuffle"></i><span>Rastgele</span></a>
+               <a href="{% url 'inbox' %}" class="menu-link"><i data-feather="mail"></i><span>Mesajlar</span>
+                    <!-- ROZET YAPISI GÜNCELLENDİ -->
+                    <span class="notification-badge {% if unread_messages_count > 0 %}show{% endif %}" id="nav-messages-badge">
+                        {{ unread_messages_count|default:"0" }}
+                    </span>
+                </a>
+                <a href="{% url 'notifications' %}" class="menu-link"><i data-feather="bell"></i><span>Bildirimler</span>
+                    <!-- ROZET YAPISI GÜNCELLENDİ -->
+                    <span class="notification-badge {% if unread_count > 0 %}show{% endif %}" id="nav-notifications-badge">
+                        {{ unread_count|default:"0" }}
+                    </span>
+                </a>
+                <!-- <a href="{% url 'profile' user.username %}" class="menu-link"><i data-feather="user"></i><span>Profil</span></a> -->
+                <a href="{% url 'settings' %}" class="menu-link"><i data-feather="settings"></i><span>Ayarlar</span></a>
+                <a href="{% url 'logout' %}" class="menu-link"><i data-feather="log-out"></i><span>Çıkış Yap</span></a>
+            {% else %}
+                <a href="{% url 'login' %}" class="menu-link"><i data-feather="log-in"></i><span>Giriş Yap</span></a>
+                <a href="{% url 'register' %}" class="menu-link"><i data-feather="edit-3"></i><span>Kayıt Ol</span></a>
+            {% endif %}
+        </nav>
+        
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+
+        <aside>
+            <div class="search-container">
+                <form method="GET" action="{% url 'search' %}">
+                    <input type="text" name="q" placeholder="Bakla'da Ara">
+                </form>
+            </div>
+            {% who_to_follow_box %}
+            {% trending_hashtags_box %}
+
+            <!-- YENİ FOOTER BÖLÜMÜ -->
+            <footer class="main-footer" style="padding: 15px; font-size: 13px; color: #536471;">
+                <nav style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+        <a href="{% url 'about' %}" style="color: inherit;">Hakkında</a> 
+                    <a href="#" style="color: inherit;">Yardım Merkezi</a>
+                    <a href="#" style="color: inherit;">Gizlilik Politikası</a>
+                    <a href="#" style="color: inherit;">Çerez Politikası</a>
+                </nav>
+                <p style="text-align: center; margin-top: 15px;">
+                    © {% now "Y" %} Bakla, Inc.
+                </p>
+            </footer>
+            <!-- FOOTER SONU -->
+        </aside>
+    </div>
+
+
+
+    <!-- Modallar ve Flash Mesajlar -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Silmeyi Onayla</h2>
+            <p>Bu baklayı kalıcı olarak silmek istediğine emin misin? Bu işlem geri alınamaz.</p>
+            <div class="modal-actions">
+                <button id="modalConfirmBtn" class="modal-confirm-btn">Evet, Sil</button>
+                <button id="modalCancelBtn" class="modal-cancel-btn">Vazgeç</button></div>
+        </div>
+    </div>
+    <div id="imageModal" class="image-modal-overlay">
+        <span id="imageModalClose" class="image-modal-close-btn">×</span>
+        <img class="image-modal-content" style="background-color: #fff;" id="modalImageContent">
+    </div>
+
+       <a href="#" id="back-to-top-btn" title="Başa Dön">↑</a>
+
+
+    {% if messages %}
+        <div class="flash-message-container" id="flash-container">
+            {% for message in messages %}<div class="alert alert-{{ message.tags }}">{{ message }}</div>{% endfor %}
+        </div>
+    {% endif %}
+
+  
+
+ <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+   <script>
+
+    document.body.addEventListener('click', function(event) {
+    const target = event.target;
+
+    // Önce, tıklanan yerin bir link, buton veya etkileşimli bir elementin
+    // İÇİNDE olup olmadığını kontrol et.
+    if (target.closest('a, button, input, textarea, .emoji-picker-wrapper, .post-image-clickable')) {
+        // Eğer öyleyse, hiçbir şey yapma, bırak kendi işini yapsın.
+        return;
+    }
+
+    // Eğer yukarıdaki kontrolü geçtiyse, tıklanan yer boş bir alandır.
+    // Şimdi en yakın '.post-container'ı bul.
+    const postContainer = target.closest('.post-container');
+    if (postContainer) {
+        const url = postContainer.dataset.baklaUrl;
+        if (url) {
+            // Eğer URL geçerliyse, o sayfaya yönlendir.
+            window.location.href = url;
+        }
+    }
+    
+    // ... bizim diğer if/else if bloklarımız (like, follow vb.) burada devam eder ...
+    // DİKKAT: Bu yeni mantık, diğer tüm if'lerden ÖNCE gelmelidir.
+});
+
+    
+    document.addEventListener('DOMContentLoaded', function () {
+    
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        // --- 1. SADECE BELİRLİ SAYFALARDA ÇALIŞAN SCRIPTLER ---
+
+        // ---- CANLI ROZET GÜNCELLEME SCRİPTİ (NİHAİ HALİ) ----
+        const notificationsBadge = document.getElementById('nav-notifications-badge');
+    const messagesBadge = document.getElementById('nav-messages-badge');
+
+        
+        // Bu script sadece giriş yapmış kullanıcılar için (rozetler varsa) çalışır
+         if (notificationsBadge && messagesBadge) {
+        
+        // HATA DÜZELTMESİ: URL'i Django'dan dinamik olarak al
+        const checkUpdatesUrl = "{% url 'check_updates' %}";
+
+        setInterval(() => {
+            fetch(checkUpdatesUrl) // Artık dinamik değişkeni kullanıyoruz
+                .then(response => response.json())
+                .then(data => {
+                        // Bildirimler rozetini güncelle
+                        if (data.unread_notifications > 0) {
+                            notificationsBadge.textContent = data.unread_notifications;
+                            notificationsBadge.classList.add('show');
+                        } else {
+                            notificationsBadge.classList.remove('show');
+                        }
+
+                        // Mesajlar rozetini güncelle
+                        if (data.unread_messages > 0) {
+                            messagesBadge.textContent = data.unread_messages;
+                            messagesBadge.classList.add('show');
+                        } else {
+                            messagesBadge.classList.remove('show');
+                        }
+                    });
+            }, 15000); // 15 saniyede bir kontrol et
+        }
+        
+
+        // Resim Önizleme Scripti (Sadece 'home.html' ve 'post_detail.html' formlarında çalışır)
+        const imageInput = document.querySelector('form input[name="image"]');
+        if (imageInput) {
+            const previewContainer = document.getElementById('image-preview-container');
+            const imagePreview = document.getElementById('image-preview');
+            const removeImageBtn = document.getElementById('remove-image-btn');
+            if (previewContainer && imagePreview && removeImageBtn) {
+                imageInput.addEventListener('change', function(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => { imagePreview.src = e.target.result; previewContainer.style.display = 'block'; }
+                        reader.readAsDataURL(file);
+                    }
+                });
+                removeImageBtn.addEventListener('click', () => {
+                    previewContainer.style.display = 'none'; imageInput.value = '';
+                });
+            }
+        }
+
+        // Emoji Seçici Scripti (Sadece emoji butonu olan sayfalarda çalışır)
+        document.querySelectorAll('.emoji-picker-trigger').forEach(trigger => {
+            const wrapper = trigger.closest('.emoji-picker-wrapper');
+            if (!wrapper) return;
+            const pickerContainer = wrapper.querySelector('.picker-container');
+            const emojiPicker = pickerContainer?.querySelector('emoji-picker');
+            const targetInput = document.querySelector(trigger.dataset.target);
+
+            if (pickerContainer && emojiPicker && targetInput) {
+                trigger.addEventListener('click', () => { pickerContainer.style.display = pickerContainer.style.display === 'none' ? 'block' : 'none'; });
+                emojiPicker.addEventListener('emoji-click', event => {
+                    const emoji = event.detail.emoji.unicode;
+                    const start = targetInput.selectionStart;
+                    const end = targetInput.selectionEnd;
+                    targetInput.value = targetInput.value.substring(0, start) + emoji + targetInput.value.substring(end);
+                    targetInput.selectionStart = targetInput.selectionEnd = start + emoji.length;
+                    targetInput.focus();
+                    pickerContainer.style.display = 'none';
+                });
+            }
+        });
+
+        // --- 2. TÜM SAYFALARDA ÇALIŞAN GENEL SCRIPTLER ---
+
+        // Modal Referansları
+        const deleteModal = document.getElementById('deleteModal');
+        const imageModal = document.getElementById('imageModal');
+
+        // Resim Modalını Kapatma Olayları
+        if (imageModal) {
+            const closeBtn = imageModal.querySelector("#imageModalClose");
+            closeBtn.addEventListener('click', () => { imageModal.style.display = "none"; });
+            imageModal.addEventListener('click', (event) => {
+                if (event.target === imageModal) { imageModal.style.display = "none"; }
+            });
+        }
+
+        // Bakla Silme Modal Olayları
+        if(deleteModal) {
+            const confirmBtn = deleteModal.querySelector('#modalConfirmBtn');
+            const cancelBtn = deleteModal.querySelector('#modalCancelBtn');
+            
+            cancelBtn.addEventListener('click', () => { deleteModal.style.display = 'none'; });
+            window.addEventListener('click', (event) => { if (event.target == deleteModal) { deleteModal.style.display = 'none'; } });
+
+            confirmBtn.addEventListener('click', (event) => {
+                const postId = event.target.dataset.postId;
+                const dataSource = event.target.dataset.source;
+                if (postId) {
+                    fetch(`/bakla/${postId}/delete/`, {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 'source': dataSource }) 
+                    }).then(res => res.json()).then(data => {
+                        if (data.status === 'success') {
+                            if (data.action === 'redirect') { window.location.href = data.url; } 
+                            else { document.getElementById(`post-${postId}`).remove(); deleteModal.style.display = 'none'; }
+                        } else { alert('Hata: ' + (data.message || 'Bilinmeyen bir hata oluştu.')); }
+                    });
+                }
+            });
+        }
+
+        // Genel Tıklama Yöneticisi
+        document.body.addEventListener('click', function(event) {
+            const target = event.target;
+            
+            // Beğen Butonu
+            const likeButton = target.closest('.like-btn');
+            if (likeButton) {
+                const postId = likeButton.dataset.postId;
+                fetch(`/bakla/${postId}/like/`, { 
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' } 
+                })
+                .then(res => res.json()).then(data => {
+                    if (data.status === 'success') {
+                        const icon = likeButton.querySelector('.like-icon');
+                        const count = likeButton.querySelector('.like-count');
+                        const countText = count.textContent.includes('Beğeni') ? ' Beğeni' : '';
+                        count.textContent = data.like_count + countText;
+                        if (data.liked) { icon.classList.add('liked'); count.classList.add('liked-text'); } 
+                        else { icon.classList.remove('liked'); count.classList.remove('liked-text'); }
+                    }
+                });
+            }
+
+            // Takip Et/Bırak Butonu
+            const followButton = target.closest('.follow-toggle-btn');
+            if (followButton) {
+                const container = followButton.closest('.follow-button-container');
+                const username = container.dataset.username;
+                const isFollowing = followButton.classList.contains('unfollow-btn');
+                const url = isFollowing ? `/accounts/unfollow/${username}/` : `/accounts/follow/${username}/`;
+                fetch(url, { 
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' } 
+                })
+                .then(res => res.json()).then(data => {
+                    if (data.status === 'success') {
+                        let newBtnHTML = data.following 
+                            ? `<button class="follow-toggle-btn unfollow-btn" style="border-radius: 9999px; padding: 6px 16px; font-weight: bold; cursor: pointer; border: 1px solid #ccc; background-color: white; color: #0f1419;">Takibi Bırak</button>` 
+                            : `<button class="follow-toggle-btn follow-btn" style="border-radius: 9999px; padding: 6px 16px; font-weight: bold; cursor: pointer; border: 1px solid #0f1419; background-color: #0f1419; color: white;">Takip Et</button>`;
+                        container.innerHTML = newBtnHTML;
+                    }
+                });
+            }
+
+            // Paylaş Butonu
+            const shareButton = target.closest('.share-btn');
+            if (shareButton) {
+                const postId = shareButton.dataset.postId;
+                fetch(`/bakla/${postId}/share/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(res => res.json()).then(data => {
+                    if (data.status === 'success') {
+                        const shareIcon = shareButton.querySelector('.share-icon');
+                        const shareCount = shareButton.querySelector('.share-count');
+                        if (shareCount) shareCount.textContent = data.share_count;
+                        if (data.shared) {
+                            shareIcon.classList.add('shared');
+                            if (shareCount) shareCount.classList.add('shared-text');
+                        } else {
+                            shareIcon.classList.remove('shared');
+                            if (shareCount) shareCount.classList.remove('shared-text');
+                        }
+                    } else {
+                        alert('Hata: ' + (data.message || 'İşlem gerçekleştirilemedi.'));
+                    }
+                });
+            }
+            
+            // Tekil Mesaj Silme Butonu
+            const deleteMessageButton = target.closest('.delete-message-btn');
+            if (deleteMessageButton) {
+                const messageId = deleteMessageButton.dataset.messageId;
+                if (confirm('Bu mesaj herkesten kalıcı olarak silinecektir. Emin misin?')) {
+                    fetch(`/messages/message/${messageId}/delete/`, { 
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' } 
+                    })
+                    .then(res => res.json()).then(data => {
+                        if (data.status === 'success') { document.getElementById(`message-${messageId}`).remove(); } 
+                        else { alert('Hata: ' + (data.message || 'Mesaj silinemedi.')); }
+                    });
+                }
+            }
+            
+            // Favori Konu Butonu
+            const favoriteButton = target.closest('.favorite-konu-btn');
+            if (favoriteButton) {
+                const slug = favoriteButton.dataset.slug;
+                fetch(`/konular/${slug}/favorite/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(res => res.json()).then(data => {
+                    if (data.status === 'success') {
+                        const icon = favoriteButton.querySelector('.favorite-icon');
+                        if (data.favorited) { icon.classList.add('favorited'); } 
+                        else { icon.classList.remove('favorited'); }
+                        feather.replace();
+                    }
+                });
+            }
+
+            // Kimi Takip Etmeli - Yenile Butonu
+            const refreshSuggestionsBtn = target.closest('#refresh-suggestions-btn');
+            if (refreshSuggestionsBtn) {
+                const container = document.getElementById('suggestion-list-container');
+                if (container) {
+                    fetch(`/accounts/get_suggestions/?count=3`)
+                    .then(res => res.json()).then(data => {
+                        container.innerHTML = data.html;
+                        feather.replace();
+                    });
+                }
+            }
+            
+            // Bakla Silme Modalını AÇAN Buton
+            const deletePostButton = target.closest('.delete-btn');
+            if(deletePostButton && deleteModal) {
+                deleteModal.style.display = 'flex';
+                deleteModal.querySelector('#modalConfirmBtn').dataset.postId = deletePostButton.dataset.postId;
+                deleteModal.querySelector('#modalConfirmBtn').dataset.source = deletePostButton.dataset.source || '';
+            }
+            
+            // Resim Modalını AÇAN Resim
+            const imageClickable = target.closest('.post-image-clickable');
+            if(imageClickable && imageModal) {
+                imageModal.style.display = "flex";
+                imageModal.querySelector("#modalImageContent").src = imageClickable.dataset.largeUrl;
+            }
+        });
+
+        // YENİDEN EKLENEN BAŞA DÖN BUTONU SCRİPTİ
+        const backToTopBtn = document.getElementById('back-to-top-btn');
+        if (backToTopBtn) {
+            window.onscroll = () => {
+                if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
+                    backToTopBtn.classList.add('show');
+                } else {
+                    backToTopBtn.classList.remove('show');
+                }
+            };
+            backToTopBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            });
+        }
+
+        // ---- FLASH MESAJ SCRİPTİ ----
+        const flashContainer = document.getElementById('flash-container');
+        if (flashContainer) {
+            setTimeout(() => {
+                flashContainer.querySelectorAll('.alert').forEach(alertBox => { alertBox.classList.add('fade-out'); });
+                setTimeout(() => { flashContainer.remove(); }, 500);
+            }, 3000);
+        }
+
+        // ---- SONSUZ KAYDIRMA SCRİPTİ ----
+        const timeline = document.querySelector('.timeline');
+        const trigger = document.getElementById('infinite-scroll-trigger');
+        if (timeline && trigger) {
+            let page = 2; let loading = false; let noMoreContent = false;
+            const loadNextPage = () => {
+                if (loading || noMoreContent) return;
+                loading = true;
+                let currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('page', page);
+                fetch(currentUrl.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(res => res.text()).then(html => {
+                    if (html.trim().length > 0) {
+                        timeline.insertAdjacentHTML('beforeend', html);
+                        page++; loading = false;
+                        feather.replace();
+                    } else {
+                        noMoreContent = true;
+                        trigger.remove();
+                    }
+                }).catch(err => { console.error("Sonsuz kaydırma hatası:", err); loading = false; });
+            };
+            const observer = new IntersectionObserver(entries => {
+                if (entries[0].isIntersecting) { loadNextPage(); }
+            }, { rootMargin: '0px 0px 400px 0px' });
+            observer.observe(trigger);
+        }
+        
+        // ---- FEATHER İKONLARINI İLK YÜKLEMEDE ÇALIŞTIR ----
+        try { feather.replace(); } catch (e) { console.error('Feather Icons yüklenemedi.', e); }
+    });
+    </script>
+
+        {% block extra_js %}{% endblock %}
+
+</body>
+</html>

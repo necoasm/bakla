@@ -1,0 +1,42 @@
+{% load static %}
+
+<div style="display: flex; gap: 12px;">
+    <!-- Sol Taraf: Avatar -->
+    <div class="form-avatar" style="flex-shrink: 0;">
+        {% static 'images/default_profile.png' as default_avatar_url %}
+        <img src="{% if user.profile.profile_photo %}{{ user.profile.profile_photo.url }}{% else %}{{ default_avatar_url }}{% endif %}" alt="{{ user.username }}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;">
+    </div>
+
+    <!-- Sağ Taraf: Form -->
+    <div class="form-main" style="flex-grow: 1;">
+        <div class="textarea-wrapper">
+            {% if form.content.errors %}<div class="errorlist">{{ form.content.errors }}</div>{% endif %}
+            {{ form.content }}
+        </div>
+        
+        <div id="image-preview-container" style="display: none; position: relative; margin-top: 10px;">
+            <button type="button" id="remove-image-btn" style="position: absolute; top: 10px; right: 10px; background-color: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: bold; font-size: 16px;">×</button>
+            <img id="image-preview" src="#" alt="Resim Önizlemesi" style="width: 100%; max-height: 400px; border-radius: 16px; object-fit: cover;">
+        </div>
+
+        <div class="form-actions" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;">
+            <div class="form-icons" style="display: flex; align-items: center; gap: 15px;">
+                
+                <!-- HATA DÜZELTMESİ: 'for' attribute'u 'form.image'e bağlandı -->
+                <label for="{{ form.image.id_for_label }}" style="cursor: pointer; color: #22C55E;" title="Resim Ekle">
+                    <i data-feather="image" style="width: 20px; height: 20px;"></i>
+                </label>
+                {{ form.image }} <!-- Gizli input -->
+
+                <div class="emoji-picker-wrapper">
+                    <button type="button" class="emoji-picker-trigger" data-target="#{{ form.content.id_for_label }}">
+                        <i data-feather="smile" style="width: 20px; height: 20px; color: #22C55E;"></i>
+                    </button>
+                    <div class="picker-container"><emoji-picker></emoji-picker></div>
+                </div>
+            </div>
+            
+            <button type="submit" class="post-button">{{ button_text|default:"Bakla" }}</button>
+        </div>
+    </div>
+</div>

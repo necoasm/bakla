@@ -1,0 +1,4 @@
+<!-- templates/includes/user_list_ajax.html -->
+{% for profile in user_list %}
+    {% include 'includes/user_list_item.html' with profile=profile request=request %}
+{% endfor %}

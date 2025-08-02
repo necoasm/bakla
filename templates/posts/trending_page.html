@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Gündem - Bakla{% endblock %}
+{% block content %}
+<div style="padding: 0 20px;">
+    <header><h1>Gündemdekiler</h1></header>
+    
+    {# .timeline sınıfını ekle #}
+    <div class="trending-list timeline">
+        {% for tag, count in tags %}
+            <a href="{% url 'konu_list' %}?q={{ tag }}" class="trending-list-item" style="display: block; padding: 15px; border-bottom: 1px solid #eff3f4;">
+                <strong style="font-size: 16px;">#{{ tag }}</strong>
+                <p style="font-size: 14px; color: #536471; margin: 5px 0 0 0;">{{ count }} Bakla</p>
+            </a>
+        {% empty %}
+            <p>Son 24 saatte gündeme giren bir şey olmadı.</p>
+        {% endfor %}
+    </div>
+
+    {% if tags.has_other_pages %}
+        <div id="infinite-scroll-trigger"></div>
+    {% endif %}
+</div>
+{% endblock %}

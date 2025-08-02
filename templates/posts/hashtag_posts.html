@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}#{{ hashtag }} - Bakla{% endblock %}
+
+{% block content %}
+    <header style="padding: 15px;">
+        <h1>#{{ hashtag }}</h1>
+        <p style="color: #536471;">Bu etiketi içeren baklalar gösteriliyor.</p>
+    </header>
+
+    <div class="timeline">
+        {% for post in posts %}
+            {% include 'includes/post_template.html' %}
+        {% empty %}
+            <p style="padding: 15px;">Bu etiketle ilgili hiçbir bakla bulunamadı.</p>
+        {% endfor %}
+    </div>
+
+    <div id="infinite-scroll-trigger"></div>
+{% endblock %}

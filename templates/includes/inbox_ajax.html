@@ -1,0 +1,22 @@
+{% load static %}
+{% for conv in conversations %}
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee;">
+        <a href="{% url 'conversation_detail' conv.id %}" class="conversation-list-item {% if conv.has_unread %}conversation-unread{% endif %}" style="flex-grow: 1; padding: 15px; text-decoration: none; color: inherit;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    {% for user in conv.participants.all %}{% if user != request.user %}
+                        <img src="{% if user.profile.profile_photo %}{{ user.profile.profile_photo.url }}{% else %}{% static 'images/default_profile.png' %}{% endif %}" alt="" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;">
+                        <strong>{{ user.username }}</strong>
+                    {% endif %}{% endfor %}
+                </div>
+                {% if conv.has_unread %}
+                    <span class="unread-dot" style="width: 12px; height: 12px; background-color: #22C55E; border-radius: 50%; flex-shrink: 0;"></span>
+                {% endif %}
+            </div>
+        </a>
+        <form method="POST" action="{% url 'hide_conversation' conv.pk %}" style="padding-right: 15px;">
+            {% csrf_token %}
+            <button type="submit" title="Sohbeti Sil" onclick="return confirm('Bu sohbeti gelen kutunuzdan kaldırmak istediğinize emin misiniz?');" style="background:none; border:none; cursor:pointer; color: #dc3545;"><i data-feather="trash-2"></i></button>
+        </form>
+    </div>
+{% endfor %}

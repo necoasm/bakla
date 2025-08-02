@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Kayıt Ol - Bakla{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-form-wrapper">
+        <div class="logo">Bakla</div>
+        <h2>Hesabını Oluştur</h2>
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+                <div class="errorlist">
+                    {{ form.errors }}
+                </div>
+            {% endif %}
+
+            {{ form.as_p }}
+            <button type="submit" class="post-button submit-btn">Kayıt Ol</button>
+        </form>
+        
+        <div class="auth-redirect-link">
+            Zaten bir hesabın var mı? <a href="{% url 'login' %}">Giriş Yap</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ other_user.username }} ile Sohbet{% endblock %}
+
+{% block content %}
+{# Veriyi HTML5 data-* attribute'larında saklayalım #}
+<div class="page-container" 
+     id="chat-container" 
+     data-conversation-id="{{ conversation.id }}" 
+     data-current-username="{{ request.user.username }}">
+    
+    <header class="page-header">
+        <h2><a href="{% url 'profile' other_user.username %}">@{{ other_user.username }}</a></h2>
+        <form method="POST" action="{% url 'hide_conversation' conversation.id %}">
+            {% csrf_token %}
+            <button type="submit" title="Sohbeti Sil" onclick="return confirm('Bu sohbeti gelen kutunuzdan kaldırmak istediğinize emin misiniz?');" style="background:none; border:none; cursor:pointer; color: #dc3545;"><i data-feather="trash-2"></i></button>
+        </form>
+    </header>
+
+    <div class="messages" id="message-list">
+        {% for message in conversation.messages.all %}
+            
+            {# Sadece gönderen değiştiğinde kullanıcı adını göster #}
+            {% ifchanged message.sender %}
+                <p class="sender-username {% if message.sender == request.user %}sent{% else %}received{% endif %}">
+                    {{ message.sender.username }}
+                </p>
+            {% endifchanged %}
+
+            {# Her mesaj için baloncuk yapısı #}
+            <div class="message-bubble-wrapper {% if message.sender == request.user %}sent{% else %}received{% endif %}" id="message-{{ message.pk }}" data-sender="{{ message.sender.username }}">
+                <div class="message-bubble">
+                    {{ message.content }}
+                </div>
+                <small class="message-timestamp">{{ message.timestamp|timesince }} önce</small>
+            </div>
+        {% endfor %}
+    </div>
+
+    <form method="POST" id="chat-form" class="chat-input-form">
+        {% csrf_token %}
+        <textarea name="content" id="chat-message-input" rows="1" placeholder="Bir mesaj yaz..."></textarea>
+        <button type="submit" id="chat-message-submit" class="post-button"><i data-feather="send"></i></button>
+    </form>
+</div>
+{% endblock %} {#  EKSİK OLAN SATIR #}
+
+{# 'base.html'den miras alınacak özel JS bloğu #}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatContainer = document.getElementById('chat-container');
+    if (!chatContainer) return; // Bu script sadece sohbet sayfasında çalışsın
+
+    // Veriyi HTML'den güvenli bir şekilde oku
+    const conversationId = chatContainer.dataset.conversationId;
+    const currentUsername = chatContainer.dataset.currentUsername;
+    
+    const messageList = document.getElementById('message-list');
+    const chatForm = document.getElementById('chat-form');
+    const messageInput = document.getElementById('chat-message-input');
+    const messageSubmitBtn = document.getElementById('chat-message-submit');
+
+    // Sayfa yüklendiğinde en alta kaydır
+    messageList.scrollTop = messageList.scrollHeight;
+
+    const chatSocket = new WebSocket(
+        'ws://' + window.location.host + '/ws/chat/' + conversationId + '/'
+    );
+
+   chatSocket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    const messageList = document.getElementById('message-list');
+    
+    // YENİ: Son mesajı kimin attığını kontrol et
+    const lastMessageWrapper = messageList.querySelector('.message-bubble-wrapper:last-child');
+    const lastSender = lastMessageWrapper ? lastMessageWrapper.dataset.sender : null;
+
+    // Eğer yeni mesajı atan, son mesajı atandan farklıysa, kullanıcı adını ekle
+    if (data.sender !== lastSender) {
+        const senderUsername = document.createElement('p');
+        senderUsername.classList.add('sender-username', data.sender === currentUsername ? 'sent' : 'received');
+        senderUsername.textContent = data.sender;
+        messageList.appendChild(senderUsername);
+    }
+
+     // Mesaj baloncuğunu oluştur ve ekle
+    const wrapper = document.createElement('div');
+    wrapper.classList.add('message-bubble-wrapper', data.sender === currentUsername ? 'sent' : 'received');
+    wrapper.dataset.sender = data.sender; // Yeni mesajın gönderenini de kaydet
+
+    
+    const bubble = document.createElement('div');
+    bubble.classList.add('message-bubble');
+    bubble.textContent = data.message;
+    
+    const timestamp = document.createElement('small');
+    timestamp.classList.add('message-timestamp');
+    timestamp.textContent = data.timestamp;
+
+    wrapper.appendChild(bubble);
+    wrapper.appendChild(timestamp);
+    
+    messageList.appendChild(wrapper);
+    messageList.scrollTop = messageList.scrollHeight;
+};
+
+
+    chatSocket.onclose = function(e) {
+        console.error('Chat soketi beklenmedik bir şekilde kapandı.');
+        messageSubmitBtn.disabled = true;
+        messageSubmitBtn.textContent = "Bağlantı Kesildi";
+    };
+
+    const sendMessage = function() {
+        const message = messageInput.value;
+        if (message.trim() === '') return;
+
+        chatSocket.send(JSON.stringify({
+            'message': message,
+            'sender': currentUsername
+        }));
+        messageInput.value = '';
+    };
+
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        sendMessage();
+    });
+    
+    // Enter tuşu ile gönderme (Shift+Enter ile alt satıra geçme)
+    messageInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+});
+</script>
+{% endblock %}

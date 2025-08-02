@@ -1,0 +1,28 @@
+{% load static %}
+{% for konu in konular %}
+    <div class="topic-list-item-wrapper">
+
+            <div class="topic-creator-avatar"   style="width: 60px;">
+                       <a href="{% url 'konu_detail' konu.slug %}">
+  <img src="{% if konu.creator.profile.profile_photo %}{{ konu.creator.profile.profile_photo.url }}{% else %}{% static 'images/default_profile.png' %}{% endif %}" alt="{{ konu.creator.username }}">
+            </div></a> 
+            <div class="topic-info">
+                        <a href="{% url 'konu_detail' konu.slug %}" class="topic-list-item">
+                             <strong class="topic-title">{{ konu.title }}</strong>
+                </a> 
+                <p class="topic-meta">
+                    {{ konu.entries.count }} bakla · oluşturan: 
+                    <a href="{% url 'profile' konu.creator.username %}" class="topic-creator-link">@{{ konu.creator.username }}</a>
+                    · {{ konu.created_at|date:"d M Y" }}
+                </p>
+            </div>
+       
+        {% if user.is_authenticated %}
+        <div class="favorite-button-wrapper">
+            <button class="favorite-konu-btn" data-slug="{{ konu.slug }}" title="Favoriye Ekle">
+                <i data-feather="star" class="favorite-icon {% if user in konu.favorited_by.all %}favorited{% endif %}"></i>
+            </button>
+        </div>
+        {% endif %}
+    </div>
+{% endfor %}

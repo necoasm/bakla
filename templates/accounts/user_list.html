@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ profile_user.username }} Kullanıcısının Listesi{% endblock %}
+
+{% block content %}
+<div style="padding:20px;">
+    <h2>@{{ profile_user.username }}</h2>
+    <hr>
+    
+    {# LİSTEYİ .timeline İLE SARMALA #}
+    <div class="user-list timeline">
+        {# Artık AJAX şablonunu doğrudan buraya dahil edebiliriz #}
+        {% include 'includes/user_list_ajax.html' %}
+    </div>
+
+    {# SONSUZ KAYDIRMA TETİKLEYİCİSİ #}
+    {% if user_list.has_other_pages %}
+        <div id="infinite-scroll-trigger"></div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Konular - Bakla{% endblock %}
+
+{% block content %}
+<div style="padding: 0 20px;">
+    <header style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0;">
+        <h1 style="font-size: 20px; margin: 0;">Tüm Konular</h1>
+        <a href="{% url 'create_konu' %}">
+            <button class="post-button" style="font-size: 14px;">Yeni Konu Aç</button>
+        </a>
+    </header>
+
+    <div class="konu-controls">
+        <form method="GET" action="{% url 'konu_list' %}" class="konu-filter-form">
+            <input type="text" name="q" placeholder="Konular içinde ara..." value="{{ query }}" class="filter-search">
+            <div class="filter-selects">
+                <select name="filter">
+                    <option value="">Tüm Konular</option>
+                    <option value="favorilerim" {% if active_filter == 'favorilerim' %}selected{% endif %}>Favorilerim</option>
+                    <option value="actiklarim" {% if active_filter == 'actiklarim' %}selected{% endif %}>Açtığım Konular</option>
+                    <option value="takip_ettiklerim" {% if active_filter == 'takip_ettiklerim' %}selected{% endif %}>Takiplerimden</option>
+                </select>
+                <select name="sort">
+                    <option value="newest" {% if sort_by == 'newest' or not sort_by %}selected{% endif %}>Yeniden Eskiye</option>
+                    <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Eskiden Yeniye</option>
+                    <option value="entry_count" {% if sort_by == 'entry_count' %}selected{% endif %}>Yorum Sayısına Göre</option>
+                </select>
+            </div>
+            <button type="submit" class="post-button filter-btn">Filtrele</button>
+        </form>
+    </div>
+    
+    <div class="topic-list timeline">
+        {% for konu in konular %}
+            <div class="topic-list-item-wrapper">
+ <div class="topic-creator-avatar"  style="width: 60px;">
+                     <a href="{% url 'konu_detail' konu.slug %}">
+    <img src="{% if konu.creator.profile.profile_photo %}{{ konu.creator.profile.profile_photo.url }}{% else %}{% static 'images/default_profile.png' %}{% endif %}" alt="{{ konu.creator.username }}">
+                  </a>  </div>
+                    <div class="topic-info">
+                                    <a href="{% url 'konu_detail' konu.slug %}" class="topic-list-item">
+    <strong class="topic-title">{{ konu.title }}</strong></a>
+                        <p class="topic-meta">
+                            {{ konu.entries.count }} bakla · oluşturan: 
+                            <a href="{% url 'profile' konu.creator.username %}" class="topic-creator-link">@{{ konu.creator.username }}</a>
+                            · {{ konu.created_at|date:"d M Y" }}
+                        </p>
+                    </div>
+                
+                {% if user.is_authenticated %}
+                <div class="favorite-button-wrapper">
+                    <button class="favorite-konu-btn" data-slug="{{ konu.slug }}" title="Favoriye Ekle">
+                        <i data-feather="star" class="favorite-icon {% if user in konu.favorited_by.all %}favorited{% endif %}"></i>
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        {% empty %}
+            <p style="padding: 25px; text-align: center; color: #536471;">Hiç konu bulunamadı.</p>
+        {% endfor %}
+    </div>
+    {% if konular.has_other_pages %}<div id="infinite-scroll-trigger"></div>{% endif %}
+</div>
+{% endblock %}

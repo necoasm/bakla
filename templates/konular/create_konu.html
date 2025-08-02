@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Yeni Konu Aç - Bakla{% endblock %}
+
+{% block content %}
+<div style="padding: 20px;">
+    <header><h1>Yeni Konu Aç</h1></header>
+    <hr>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="post-button">Konuyu Aç</button>
+    </form>
+</div>
+{% endblock %}

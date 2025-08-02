@@ -1,0 +1,16 @@
+<!-- templates/includes/trending_hashtags.html -->
+<div class="trending-container" style="background-color:#f7f9f9; border-radius:15px; padding:15px; margin-top: 20px;">
+    <h3 style="margin-top:0;">Gündemdekiler</h3>
+    <ul style="list-style: none; padding: 0; margin: 0;">
+        {% for tag, count in tags %}
+            <li style="margin-bottom: 10px;">
+                <a href="{% url 'hashtag_posts' tag %}" style="text-decoration: none; color: inherit;">
+                    <strong style="display: block; font-size: 15px;">#{{ tag }}</strong>
+                    <span style="font-size: 13px; color: #536471;">{{ count }} Bakla</span>
+                </a>
+            </li>
+        {% empty %}
+            <li style="font-size: 14px; color: #536471;">Gündemde bir şey yok.</li>
+        {% endfor %}
+    </ul>
+</div>

@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %} {# Varsayılan resimler gibi statik dosyaları yüklemek için #}
+
+{% block title %}{{ profile_user.username }} - Bakla{% endblock %}
+
+{% block content %}
+    <div class="profile-header">
+        <div class="cover-photo">
+            {% if profile_user.profile.cover_photo %}
+                <img src="{{ profile_user.profile.cover_photo.url }}" alt="Kapak Fotoğrafı" style="width:100%; height:100%; object-fit: cover;">
+            {% else %}
+                <img src="{% static 'images/default_cover.png' %}" alt="Varsayılan Kapak" style="width:100%; height:100%; object-fit: cover;">
+            {% endif %}
+        </div>
+        <div class="profile-details">
+            <div class="profile-top">
+                <div class="profile-photo" style="width: 134px; height: 134px; border-radius: 9999px; border: 4px solid white; background-color: #f0f2f5; margin-top: -75px; position: relative; overflow: hidden;">
+                    {% if profile_user.profile.profile_photo %}
+                        <img src="{{ profile_user.profile.profile_photo.url }}" alt="Profil Fotoğrafı" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                        <img src="{% static 'images/default_profile.png' %}" alt="Varsayılan Profil" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% endif %}
+                </div>
+                <div>
+                    {% if request.user == profile_user %}
+                        <a href="{% url 'edit_profile' %}"><button class="action-button unfollow">Profili Düzenle</button></a>
+                    {% else %}
+                       
+                    <!-- HATA DÜZELTMESİ BURADA: Buton yapısı güncellendi -->
+                        <div class="follow-button-container" data-username="{{ profile_user.username }}">
+                            {% if is_following %}
+                                <button class="follow-toggle-btn unfollow-btn" style="border-radius: 9999px; padding: 8px 20px; font-weight: bold; cursor: pointer; border: 1px solid #ccc; background-color: white; color: #0f1419;">Takibi Bırak</button>
+                            {% else %}
+                                <button class="follow-toggle-btn follow-btn" style="border-radius: 9999px; padding: 8px 20px; font-weight: bold; cursor: pointer; border: 1px solid #0f1419; background-color: #0f1419; color: white;">Takip Et</button>
+                            {% endif %}
+                        </div>
+                        
+                       {% if can_send_message %}
+            <a href="{% url 'start_conversation' profile_user.username %}">
+                <button class="action-button">Mesaj Gönder</button>
+            </a>
+        {% endif %}
+    {% endif %}
+                </div>
+            </div>
+            <div class="profile-info">
+
+                <h2>{{ profile_user.first_name }} {{ profile_user.last_name }} 
+                     {% if profile_user.profile.mood_emoji %}
+            <span class="mood-emoji" title="Şu anki ruh hali">{{ profile_user.profile.mood_emoji }}</span>
+        {% endif %}
+                </h2>
+
+                <p class="username" style="display: flex; align-items: center; gap: 8px;">
+        <span>@{{ profile_user.username }}</span>
+        
+        {# YENİ "TAKİPÇİN" ETİKETİ #}
+        {% if is_follower %}
+            <span class="follower-badge" style="background-color: #f7f9f9; color: #536471; font-size: 12px; padding: 2px 8px; border-radius: 4px; font-weight: bold;">
+                Takipçin
+            </span>
+        {% endif %}
+    </p>
+               
+                <p class="bio">{{ profile_user.profile.bio }}</p>
+                <div class="profile-stats">
+                    <a href="{% url 'following_list' profile_user.username %}"><span><b>{{ following_count }}</b> Takip edilen</span></a>
+                    <a href="{% url 'followers_list' profile_user.username %}"><span><b>{{ follower_count }}</b> Takipçi</span></a>
+                </div>
+                <div class="profile-meta" style="margin-top: 10px; color: #536471;">
+                    <span>🗓️ {{ profile_user.date_joined|date:"F Y" }} tarihinde katıldı</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- YENİ: SEKMELER (TABS) -->
+    <div class="profile-tabs" style="display: flex; border-bottom: 1px solid #eff3f4;">
+        <a href="{% url 'profile' profile_user.username %}" class="tab-link {% if active_tab == 'posts' %}active{% endif %}" 
+           style="flex: 1; text-align: center; padding: 15px; font-weight: bold; text-decoration:none; color: inherit;">Baklalar  ({{ post_count }})</a>
+        
+        <a href="?tab=replies" class="tab-link {% if active_tab == 'replies' %}active{% endif %}"
+           style="flex: 1; text-align: center; padding: 15px; font-weight: bold; text-decoration:none; color: inherit;">Yanıtlar</a>
+
+        <a href="?tab=media" class="tab-link {% if active_tab == 'media' %}active{% endif %}"
+           style="flex: 1; text-align: center; padding: 15px; font-weight: bold; text-decoration:none; color: inherit;">Fotoğraflar</a>
+
+        <a href="?tab=likes" class="tab-link {% if active_tab == 'likes' %}active{% endif %}"
+           style="flex: 1; text-align: center; padding: 15px; font-weight: bold; text-decoration:none; color: inherit;">Beğeniler</a>
+           
+           <a href="?tab=shares" class="tab-link {% if active_tab == 'shares' %}active{% endif %}"
+           style="flex: 1; text-align: center; padding: 15px; font-weight: bold; text-decoration:none; color: inherit;">Paylaşılanlar</a>`
+
+    </div>
+
+    <div class="timeline">
+        {% for post in posts %}
+            {# Kod tekrarını önlemek için post şablonunu dahil ediyoruz #}
+            {% include 'includes/post_template.html' %}
+        {% empty %}
+            <p style="padding: 15px;">Bu kullanıcının henüz hiç baklası yok.</p>
+        {% endfor %}
+    </div>
+
+    {# Sonsuz kaydırma bu elementi gözlemleyecek #}
+    <div id="infinite-scroll-trigger"></div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Arama Sonuçları: {{ query }}{% endblock %}
+
+{% block content %}
+<div style="padding:20px;">
+    <h2>'{{ query }}' için arama sonuçları</h2>
+    <hr>
+    
+    {% if not users and not posts and not konular %}
+        <p>Hiçbir sonuç bulunamadı.</p>
+    {% else %}
+        
+        {# YENİ: BULUNAN KONULARI LİSTELE #}
+        {% if konular %}
+            <h3>İlgili Konular</h3>
+            {% for konu in konular %}
+                <a href="{% url 'konu_detail' konu.slug %}" style="display: block; padding: 10px; border-bottom: 1px solid #eee;">
+                    <strong>{{ konu.title }}</strong>
+                    <span style="color: #536471; font-size: 14px;"> ({{ konu.entries.count }} bakla)</span>
+                </a>
+            {% endfor %}
+            <hr>
+        {% endif %}
+
+        {% if users %}
+            <h3>Bulunan Kullanıcılar</h3>
+            {% for profile in users %}
+                {# user_list_item.html, User değil Profile nesnesi bekler #}
+                {% include 'includes/user_list_item.html' with profile=profile.profile %}
+            {% endfor %}
+            <hr>
+        {% endif %}
+
+        {% if posts %}
+            <h3>Bulunan Baklalar</h3>
+            <div class="timeline">
+                {% for post in posts %}
+                    {% include 'includes/post_template.html' %}
+                {% endfor %}
+            </div>
+            {% if posts.has_other_pages %}<div id="infinite-scroll-trigger"></div>{% endif %}
+        {% endif %}
+
+    {% endif %}
+</div>
+{% endblock %}

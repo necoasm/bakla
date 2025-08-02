@@ -1,0 +1,87 @@
+{% load static %}
+{% load suggestion_tags %}
+{% with post_to_show=post.original_post|default:post %}
+
+
+<div class="post-container" 
+     id="post-{{ post.pk }}" 
+     data-bakla-url="{% if post_to_show.konu %}{% url 'konu_detail' post_to_show.konu.slug %}{% else %}{% url 'post_detail' post_to_show.pk %}{% endif %}"
+     style="cursor: pointer;">    
+   
+
+        
+    <div style="display: flex; gap: 12px;">
+        <div class="post-author-avatar" style="flex-shrink: 0;">
+            <a href="{% url 'profile' post_to_show.author.username %}">
+                <img src="{% if post_to_show.author.profile.profile_photo %}{{ post_to_show.author.profile.profile_photo.url }}{% else %}{% static 'images/default_profile.png' %}{% endif %}" alt="{{ post_to_show.author.username }}" class="post-avatar-img">
+            </a>
+        </div>
+
+        <div class="post-main-column">
+             {# 1. EĞER BU BİR PAYLAŞIMSA, PAYLAŞIM BİLGİSİNİ GÖSTER #}
+        {% if post.original_post %}
+         <p class="share-info" style="font-size: 13px; color: #536471; margin-bottom: 8px; padding-left: 0px;">
+            <i data-feather="repeat" style="width:14px; height:14px; vertical-align: -2px;"></i>
+            <a href="{% url 'profile' post.author.username %}" style="font-weight: bold;">{{ post.author.username }}</a> paylaştı
+        </p>
+        {% endif %}
+           
+            
+            <!-- 3. YENİ VE GELİŞMİŞ BAĞLAM GÖSTERİMİ -->
+            {% if post_to_show.parent %}
+            <p class="reply-context" style="font-size: 13px; color: #536471; margin-bottom: 8px; padding-left: 0px;">
+               <i data-feather="message-circle" style="width:14px; height:14px; vertical-align: -2px;"></i><a href="{% url 'profile' post_to_show.parent.author.username %}"> @{{ post_to_show.parent.author.username }}</a> kullanıcısına yanıt olarak
+            </p>
+            {% endif %}
+            
+            {% if post_to_show.konu %}
+            <p class="topic-context" style="font-size: 13px; font-weight: bold; color: #536471; margin-bottom: 8px; padding-left: 0px;">
+                <i data-feather="hash" style="width:14px; height:14px; vertical-align: -2px;"></i><a href="{% url 'konu_detail' post_to_show.konu.slug %}">{{ post_to_show.konu.title }}</a> <span style="font-weight: normal;">konusunda</span>
+            </p>
+            {% endif %}
+
+             <div class="post-header">
+                <a href="{% url 'profile' post_to_show.author.username %}" class="post-author-name">
+                    {% if post_to_show.author.get_full_name %}{{ post_to_show.author.get_full_name|truncatechars:15 }}{% else %}{{ post_to_show.author.username|truncatechars:15 }}{% endif %}
+                </a>
+                <span class="post-author-username" style="font-size: 12px; background-color: #d9d9d9; padding:3px 10px 3px 10px  ; border-radius: 20px;">@{{ post_to_show.author.username|truncatechars:15 }}</span>
+                <a href="{% if post_to_show.konu %}{% url 'konu_detail' post_to_show.konu.slug %}{% else %}{% url 'post_detail' post_to_show.pk %}{% endif %}" class="post-timestamp-link">
+                    <span class="post-meta" style="font-size: 13px;">· {{ post_to_show.created_at|timesince }} önce</span>
+                </a>
+            </div>
+
+            <div class="post-content">{{ post_to_show.content|safe|linkify }}</div>
+            
+            {% if post_to_show.image %}
+            <div class="post-image-container">
+                <img src="{{ post_to_show.image.url }}" data-large-url="{{ post_to_show.image.url }}" alt="Bakla Resmi" class="post-image-clickable">
+            </div>
+            {% endif %}
+
+            <div class="post-actions">
+                <a href="{% if post_to_show.konu %}{% url 'konu_detail' post_to_show.konu.slug %}{% else %}{% url 'post_detail' post_to_show.pk %}{% endif %}" class="action-item">
+                    <i data-feather="message-circle"></i><span>{{ post_to_show.replies.count }}</span>
+                </a>
+                <button class="like-btn action-item" data-post-id="{{ post_to_show.pk }}">
+                    <i data-feather="heart" class="like-icon {% if request.user in post_to_show.likes.all %}liked{% endif %}"></i>
+                    <span class="like-count {% if request.user in post_to_show.likes.all %}liked-text{% endif %}">{{ post_to_show.likes.count }}</span>
+                </button>
+                <!-- PAYLAŞ BUTONU GÜNCELLENDİ (a -> button) -->
+    <button class="share-btn action-item" data-post-id="{{ post_to_show.pk }}" title="Paylaş">
+        <i data-feather="repeat" class="share-icon {% if request.user in post_to_show.shared_by.all %}shared{% endif %}"></i>
+        <span class="share-count {% if request.user in post_to_show.shared_by.all %}shared-text{% endif %}">
+            {{ post_to_show.shared_by.count }}
+        </span>
+    </button>
+                
+                {# Silme işlemi her zaman 'post' (yani paylaşımın kendisi) üzerinden yapılır #}
+                {% if request.user == post.author %}
+                <button class="delete-btn action-item" data-post-id="{{ post.pk }}">
+                    <i data-feather="trash-2"></i>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endwith %}
+</div>

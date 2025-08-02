@@ -1,0 +1,3 @@
+{% for user_suggestion in suggestions %}
+    {% include 'includes/user_list_item.html' with profile=user_suggestion.profile request=request %}
+{% endfor %}

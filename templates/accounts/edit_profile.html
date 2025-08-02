@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profili Düzenle - Bakla{% endblock %}
+
+{% block content %}
+<div class="form-page-container">
+    <header><h1>Profili Düzenle</h1></header>
+    
+    <form method="POST" enctype="multipart/form-data" style="margin-top: 20px;">
+        {% csrf_token %}
+        
+        <!-- KULLANICI BİLGİLERİ -->
+        <fieldset class="form-fieldset">
+            <legend>Kullanıcı Bilgileri</legend>
+            <p>
+                {{ u_form.username.label_tag }}
+                {{ u_form.username }}
+                <small style="color: #657786; display: block; margin-top: 5px;">{{ u_form.username.help_text }}</small>
+            </p>
+            <p>{{ u_form.first_name.label_tag }} {{ u_form.first_name }}</p>
+            <p>{{ u_form.last_name.label_tag }} {{ u_form.last_name }}</p>
+            <p>{{ u_form.email.label_tag }} {{ u_form.email }}</p>
+        </fieldset>
+
+        <!-- PROFİL BİLGİLERİ -->
+        <fieldset class="form-fieldset">
+            <legend>Profil Bilgileri</legend>
+            <p>{{ p_form.bio.label_tag }}<br>{{ p_form.bio }}</p>
+            
+           <!-- Profil Fotoğrafı Alanı -->
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Profile photo:</label>
+                {% if p_form.instance.profile_photo %}
+                <div class="image-management-container">
+                    <img src="{{ p_form.instance.profile_photo.url }}" alt="Mevcut Profil Fotoğrafı" class="image-preview-circle">
+                   <div style="margin-top: 10px; display: flex; gap: 10px;">
+            <label for="{{ p_form.profile_photo.id_for_label }}" class="change-photo-label">Değiştir</label>
+            <button type="submit" name="remove_profile_photo" value="1" class="remove-photo-btn">Kaldır</button>
+        </div>
+                </div>
+                {{ p_form.profile_photo.as_hidden }} {# Input'u gizli olarak render et #}
+                {% else %}
+                    {{ p_form.profile_photo }} {# Fotoğraf yoksa, normal dosya seçme butonu #}
+                {% endif %}
+            </div>
+
+            <!-- Kapak Fotoğrafı Alanı -->
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Cover photo:</label>
+                {% if p_form.instance.cover_photo %}
+                <div class="image-management-container vertical">
+                    <img src="{{ p_form.instance.cover_photo.url }}" alt="Mevcut Kapak Fotoğrafı" class="image-preview-cover">
+                   <div style="margin-top: 10px; display: flex; gap: 10px;">
+            <label for="{{ p_form.cover_photo.id_for_label }}" class="change-photo-label">Değiştir</label>
+            <button type="submit" name="remove_cover_photo" value="1" class="remove-photo-btn">Kaldır</button>
+        </div>
+                </div>
+                {{ p_form.cover_photo.as_hidden }} {# Input'u gizli olarak render et #}
+                {% else %}
+                    {{ p_form.cover_photo }}
+                {% endif %}
+            </div>
+            
+            <!-- Diğer Alanlar -->
+            <div class="form-group-checkbox">
+                {{ p_form.can_receive_all_messages }}
+                {{ p_form.can_receive_all_messages.label_tag }}
+            </div>
+
+            <div class="mood-emoji-field">
+                <label for="{{ p_form.mood_emoji.id_for_label }}">Ruh Hali Emojisi:</label>
+                <div class="mood-emoji-input-wrapper">
+                    {{ p_form.mood_emoji }}
+                    <div class="emoji-picker-wrapper">
+                        <button type="button" class="emoji-picker-trigger" data-target="#{{ p_form.mood_emoji.id_for_label }}">
+                            <i data-feather="smile"></i>
+                        </button>
+                        <div class="picker-container"><emoji-picker></emoji-picker></div>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+        
+        <button type="submit" class="post-button save-changes-btn">Değişiklikleri Kaydet</button>
+    </form>
+</div>
+{% endblock %}

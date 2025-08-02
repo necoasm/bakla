@@ -1,0 +1,7 @@
+<!-- templates/includes/trending_list_ajax.html -->
+{% for tag, count in tags %}
+    <a href="{% url 'konu_list' %}?q={{ tag }}" class="trending-list-item" style="display: block; padding: 15px; border-bottom: 1px solid #eff3f4;">
+        <strong style="font-size: 16px;">#{{ tag }}</strong>
+        <p style="font-size: 14px; color: #536471; margin: 5px 0 0 0;">{{ count }} Bakla</p>
+    </a>
+{% endfor %}

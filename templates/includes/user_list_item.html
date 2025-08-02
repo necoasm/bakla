@@ -1,0 +1,23 @@
+<!-- templates/includes/user_list_item.html -->
+{% load static %}
+
+<div class="user-item" style="display: flex; padding: 10px 0; border-bottom: 1px solid #eee; align-items: center; justify-content: space-between;">
+    <a href="{% url 'profile' profile.user.username %}" style="display: flex; align-items: center; gap: 10px;">
+        <img src="{% if profile.profile_photo %}{{ profile.profile_photo.url }}{% else %}{% static 'images/default_profile.png' %}{% endif %}" alt="" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;">
+        <div>
+            <strong style="font-size: 15px;">{% if profile.user.get_full_name %}{{ profile.user.get_full_name }}{% else %}{{ profile.user.username }}{% endif %}</strong>
+            <p style="margin: 2px 0 0 0; color: #536471; font-size: 14px;">@{{ profile.user.username }}</p>
+        </div>
+    </a>
+
+    <div class="follow-button-container" data-username="{{ profile.user.username }}">
+        {% if request.user.is_authenticated and profile.user != request.user %}
+            {% if profile in request.user.profile.following.all %}
+                <button class="follow-toggle-btn unfollow-btn" style="border-radius: 9999px; padding: 6px 16px; font-weight: bold; cursor: pointer; border: 1px solid #ccc; background-color: white; color: #0f1419;">Takibi Bırak</button>
+            {% else %}
+                <button class="follow-toggle-btn follow-btn" style="border-radius: 9999px; padding: 6px 16px; font-weight: bold; cursor: pointer; border: 1px solid #0f1419; background-color: #0f1419; color: white;">Takip Et</button>
+            {% endif %}
+        {% endif %}
+    
+    </div>
+</div>

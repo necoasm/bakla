@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Giriş Yap - Bakla{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-form-wrapper">
+        <div class="logo">Bakla</div>
+        <h2>Giriş Yap</h2>
+        
+        <form method="POST">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+                <p style="color: red; text-align:center;">Kullanıcı adı veya şifre yanlış.</p>
+            {% endif %}
+
+            <div class="form-field">
+                <label for="id_username">Kullanıcı adı:</label>
+                <input type="text" name="username" autofocus autocapitalize="none" autocomplete="username" maxlength="150" required id="id_username">
+            </div>
+            
+            <div class="form-field">
+                <label for="id_password">Parola:</label>
+                <input type="password" name="password" autocomplete="current-password" required id="id_password">
+            </div>
+            
+            <button type="submit" class="post-button submit-btn">Giriş Yap</button>
+        </form>
+        
+        <div class="auth-redirect-link">
+            Hesabın yok mu? <a href="{% url 'register' %}">Kayıt Ol</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

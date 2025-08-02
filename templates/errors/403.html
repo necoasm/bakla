@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}İzin Gerekli{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 50px 20px;">
+    <h1 style="font-size: 72px; color: #F59E0B; margin: 0;">403</h1>
+    <h2 style="font-size: 24px; margin-top: 10px;">Hazine Korumalı Alan!</h2>
+    <p style="color: #536471; max-width: 400px; margin: 20px auto;">
+        Bu sayfadaki baklalar o kadar değerli ki, özel izin gerektiriyor. Belki de doğru zaman henüz gelmemiştir. 😉
+    </p>
+    <a href="{% url 'home' %}" style="display: inline-block; margin-top: 20px;">
+        <button class="post-button">Ana Sayfa'ya Dön</button>
+    </a>
+</div>
+{% endblock %}

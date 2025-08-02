@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bildirimler - Bakla{% endblock %}
+
+{% block content %}
+<div style="padding: 0 20px;">
+    <header><h1>Bildirimler</h1></header>
+    
+    <div class="notification-list timeline">
+        
+        {# HATA DÜZELTMESİ: 'for' döngüsü ve 'empty' bloğu doğru şekilde birleştirildi #}
+        {% for notification in notifications %}
+            <div class="notification-item {% if not notification.is_read %}notification-unread{% endif %}" 
+                 style="display: flex; padding: 15px; border-bottom: 1px solid #eee; gap: 10px;">
+                
+                <!-- Sol Taraf: İkon -->
+                <div style="font-size: 24px; color: #657786; flex-shrink: 0; width: 30px; text-align: right;">
+                    {% if notification.notification_type == 'like' %}<i data-feather="heart" style="color: #f91880;"></i>
+                    {% elif notification.notification_type == 'reply' %}<i data-feather="message-circle" style="color: #1d9bf0;"></i>
+                    {% elif notification.notification_type == 'follow' %}<i data-feather="user-plus" style="color: #22C55E;"></i>
+                    {% elif notification.notification_type == 'mention' %}<i data-feather="at-sign"></i>
+                    {% elif notification.notification_type == 'share' %}<i data-feather="repeat" style="color: #17bf63;"></i>
+                    {% elif notification.notification_type == 'share_like' %}<i data-feather="heart" style="color: #f91880;"></i>
+                    {% elif notification.notification_type == 'topic_entry' %}<i data-feather="hash" style="color: #6a0dad;"></i>
+                    {% endif %}
+                </div>
+
+                <!-- Sağ Taraf: Bildirim İçeriği -->
+                <div style="flex-grow: 1;">
+                    <a href="{% url 'profile' notification.sender.username %}" style="margin-bottom: 8px; display: block; width: 32px;">
+                        <img src="{% if notification.sender.profile.profile_photo %}{{ notification.sender.profile.profile_photo.url }}{% else %}{% static 'images/default_profile.png' %}{% endif %}" alt="" style="width: 32px; height: 32px; border-radius: 50%;">
+                    </a>
+
+                    
+                    <p style="margin: 0 0 8px 0;">
+                        <a href="{% url 'profile' notification.sender.username %}"><strong>{{ notification.sender.username }}</strong></a>
+                        
+                        {% if notification.notification_type == 'like' %} baklanı beğendi.
+                        {% elif notification.notification_type == 'reply' %} baklana yanıt verdi.
+                        {% elif notification.notification_type == 'follow' %} seni takip etmeye başladı.
+                        {% elif notification.notification_type == 'mention' %} bir baklada senden bahsetti.
+                        {% elif notification.notification_type == 'share' %} baklanı paylaştı.
+                        {% elif notification.notification_type == 'share_like' %} paylaştığın bir baklayı beğendi.
+                        {% elif notification.notification_type == 'topic_entry' %}
+                            <a href="{% url 'konu_detail' notification.post.konu.slug %}" style="font-weight: bold;">{{ notification.post.konu.title }}</a> konusuna bir yorum yaptı.
+                        {% endif %}
+                    </p>
+
+                    
+                    {% if notification.post %}
+                        <a href="{% if notification.notification_type == 'topic_entry' and notification.post.konu %}{% url 'konu_detail' notification.post.konu.slug %}{% else %}{% url 'post_detail' notification.post.pk %}{% endif %}" style="text-decoration: none;">
+                            <p style="color: #536471; font-size: 14px; margin: 0; padding: 10px; border: 1px solid #eee; border-radius: 8px;">
+                                {{ notification.post.content|truncatechars:100 }}
+                            </p>
+                        </a>
+                                                            <p class="notification-timestamp">{{ notification.created_at|timesince }} önce</p>
+
+                    {% endif %}
+                </div>
+
+            </div>
+        {% empty %}
+            <p style="padding: 25px; text-align: center; color: #536471;">Hiç bildirim yok.</p>
+        {% endfor %}
+    </div>
+    
+    {% if notifications.has_other_pages %}
+        <div id="infinite-scroll-trigger"></div>
+    {% endif %}
+</div>
+{% endblock %}

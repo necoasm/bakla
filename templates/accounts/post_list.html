@@ -1,0 +1,30 @@
+<!-- templates/accounts/post_list.html -->
+{% extends 'base.html' %}
+
+{% block title %}@{{ profile_user.username }} Tarafından Beğenilenler{% endblock %}
+
+{% block content %}
+<div style="padding:20px;">
+    <h2>@{{ profile_user.username }} Tarafından Beğenilenler</h2>
+    <hr>
+</div>
+<div class="timeline">
+    {% for post in posts %}
+        <div class="post-container" id="post-{{ post.pk }}">
+            <p class="post-author">
+                <a href="{% url 'profile' post.author.username %}">{{ post.author.username }}</a>
+                <span class="post-meta">· {{ post.created_at|timesince }} önce</span>
+            </p>
+            <a href="{% url 'post_detail' post.pk %}" style="text-decoration: none; color: inherit;">
+                <p class="post-content">{{ post.content }}</p>
+            </a>
+            <div class="post-actions">
+                <a href="{% url 'like_post' post.pk %}">{% if user in post.likes.all %}❤️{% else %}🤍{% endif %} {{ post.number_of_likes }}</a>
+                {% if user == post.author %}<button class="delete-btn" data-post-id="{{ post.pk }}">Sil</button>{% endif %}
+            </div>
+        </div>
+    {% empty %}
+        <p style="padding:15px;">Bu kullanıcının beğendiği bir bakla yok.</p>
+    {% endfor %}
+</div>
+{% endblock %}

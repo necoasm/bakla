@@ -1,0 +1,36 @@
+<!-- templates/includes/notification_list_ajax.html -->
+{% load static %} {# Bu dosyada static gerektiği için load etmeyi unutmuyoruz #}
+
+{% for notification in notifications %}
+    <div class="notification-item {% if not notification.is_read %}notification-unread{% endif %}" 
+         style="display: flex; padding: 15px; border-bottom: 1px solid #eee; align-items: center;"
+    >
+        <div style="margin-right: 15px; font-size: 24px; color: #657786;">
+    {% if notification.notification_type == 'like' %}<i data-feather="heart" style="color: #f91880;"></i>
+    {% elif notification.notification_type == 'reply' %}<i data-feather="message-circle" style="color: #1d9bf0;"></i>
+    {% elif notification.notification_type == 'follow' %}<i data-feather="user-plus" style="color: #22C55E;"></i>
+    {% elif notification.notification_type == 'mention' %}<i data-feather="at-sign" style="color: #657786;"></i>
+    {% endif %}
+</div>
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <a href="{% url 'profile' notification.sender.username %}">
+                    <img src="{% if notification.sender.profile.profile_photo %}{{ notification.sender.profile.profile_photo.url }}{% else %}{% static 'images/default_profile.png' %}{% endif %}" alt="" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                </a>
+                <p style="margin: 0;">
+                    <a href="{% url 'profile' notification.sender.username %}"><strong>{{ notification.sender.username }}</strong></a>
+                    {% if notification.notification_type == 'like' %}
+                        <a href="{% url 'post_detail' notification.post.pk %}">baklanı beğendi.</a>
+                    {% elif notification.notification_type == 'reply' %}
+                        <a href="{% url 'post_detail' notification.post.pk %}">baklana yanıt verdi.</a>
+                    {% elif notification.notification_type == 'follow' %}
+                        seni takip etmeye başladı.
+                    {% elif notification.notification_type == 'mention' %}
+                        <a href="{% url 'post_detail' notification.post.pk %}">bir baklada senden bahsetti.</a>
+                    {% endif %}
+                </p>
+            </div>
+            <p style="font-size: 13px; color: #536471; margin: 5px 0 0 50px;">{{ notification.created_at|timesince }} önce</p>
+        </div>
+    </div>
+{% endfor %}

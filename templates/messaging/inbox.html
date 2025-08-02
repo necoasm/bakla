@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mesajlar - Gelen Kutusu{% endblock %}
+
+{% block content %}
+<div class="page-container" style="padding: 0 20px;">
+    <header class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>Gelen Kutusu</h1>
+        {% if unread_messages_count > 0 %}
+            <form method="POST" action="{% url 'read_all_messages' %}">
+                {% csrf_token %}
+                <button type="submit" class="action-button unfollow" style="font-size: 12px;">Tümünü Okundu İşaretle</button>
+            </form>
+        {% endif %}
+    </header>
+    
+    <div class="conversation-list timeline">
+        {% for conv in conversations %}
+            <div class="conversation-list-item-wrapper {% if conv.has_unread %}conversation-unread{% endif %}" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee;">
+                
+                {# HATA DÜZELTMESİ: 'with' ve 'cut' kaldırıldı, 'for' döngüsü kullanılıyor #}
+                {% for user in conv.participants.all %}
+                    {% if user != request.user %}
+                        <a href="{% url 'conversation_detail' conv.id %}" class="conversation-list-item" style="flex-grow: 1; padding: 15px; text-decoration: none; color: inherit; display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                {% static 'images/default_profile.png' as default_avatar_url %}
+                                <img src="{% if user.profile.profile_photo %}{{ user.profile.profile_photo.url }}{% else %}{{ default_avatar_url }}{% endif %}" alt="" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;">
+                                <strong>{{ user.username }}</strong>
+                            </div>
+                            {% if conv.has_unread %}
+                                <span class="unread-dot" style="width: 12px; height: 12px; background-color: #22C55E; border-radius: 50%; flex-shrink: 0;"></span>
+                            {% endif %}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+
+                <form method="POST" action="{% url 'hide_conversation' conv.pk %}" style="padding-right: 15px;">
+                    {% csrf_token %}
+                    <button type="submit" title="Sohbeti Sil" onclick="return confirm('Bu sohbeti gelen kutunuzdan kaldırmak istediğinize emin misiniz?');" style="background:none; border:none; cursor:pointer; color: #dc3545;"><i data-feather="trash-2"></i></button>
+                </form>
+            </div>
+        {% empty %}
+            <p class="empty-list-message">Gelen kutunuz boş.</p>
+        {% endfor %}
+    </div>
+
+    {% if conversations.has_other_pages %}
+        <div id="infinite-scroll-trigger"></div>
+    {% endif %}
+</div>
+{% endblock %}

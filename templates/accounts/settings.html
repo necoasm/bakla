@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Ayarlar{% endblock %}
+{% block content %}
+<div style="padding: 20px;">
+    <h2>Ayarlar</h2>
+    <hr>
+    <ul style="list-style: none; padding: 0;">
+        <li style="margin-bottom: 15px;">
+            <a href="{% url 'edit_profile' %}" style="color: #1d9bf0;">Profili Düzenle</a>
+        </li>
+        <li>
+            <a href="{% url 'password_change' %}" style="color: #1d9bf0;">Şifre Değiştir</a>
+        </li>
+    </ul>
+</div>
+{% endblock %}
